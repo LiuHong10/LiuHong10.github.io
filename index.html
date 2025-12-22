@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>培训证书</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "SimSun", "宋体", "STSong", serif;
+    }
+
+    body {
+      font-family: "SimSun", "宋体", "STSong", serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* 控制面板样式 */
+    .control-panel {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .control-panel label {
+      font-size: 18px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    .control-panel input {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid #d4af37;
+      border-radius: 5px;
+      outline: none;
+      min-width: 200px;
+      font-family: "SimSun", "宋体", serif;
+    }
+
+    .control-panel input:focus {
+      border-color: #1a237e;
+      box-shadow: 0 0 5px rgba(26, 35, 126, 0.3);
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 20px;
+      font-family: "SimSun", "宋体", serif;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .download-btn:active {
+      transform: translateY(0);
+    }
+
+    .certificate-container {
+      background: #fff;
+      width: 1000px;
+      height: 700px;
+      max-width: 100%;
+      padding: 0;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      position: relative;
+      border: none;
+      overflow: hidden;
+      font-family: "SimSun", "宋体", "STSong", serif;
+    }
+
+    .certificate-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .certificate-container > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 装饰边框 */
+    .certificate-container::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      border: 2px solid #d4af37;
+      pointer-events: none;
+      display: none; /* 隐藏装饰边框，因为背景图片已有边框 */
+    }
+
+    /* 四角装饰 */
+    .corner {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #d4af37;
+      display: none; /* 隐藏装饰，因为背景图片已有装饰 */
+    }
+
+    .corner-top-left {
+      top: 10px;
+      left: 10px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .corner-top-right {
+      top: 10px;
+      right: 10px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .corner-bottom-left {
+      bottom: 10px;
+      left: 10px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .corner-bottom-right {
+      bottom: 10px;
+      right: 10px;
+      border-left: none;
+      border-top: none;
+    }
+
+    /* 标题区域 */
+    .header {
+      text-align: center;
+      position: absolute;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+    }
+
+    .header-title {
+      font-size: 56px;
+      font-weight: bold;
+      color: #1a237e;
+      letter-spacing: 12px;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-subtitle {
+      font-size: 22px;
+      color: #666;
+      letter-spacing: 6px;
+    }
+
+    /* 装饰线 */
+    .divider {
+      width: 300px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #d4af37, transparent);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .divider:first-of-type {
+      top: 240px;
+    }
+
+    .divider:last-of-type {
+      bottom: 160px;
+    }
+
+    /* 证书编号 */
+    .director-signature {
+      text-align: left;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: "SimSun", "宋体", "STSong", serif;
+      color: #000;
+      position: absolute;
+      bottom: 150px;
+      left: 150px;
+    }
+
+    .certificate-number {
+      text-align: left;
+      font-size: 14px;
+      color: #999;
+      position: absolute;
+      bottom: 90px;
+      left: 150px;
+    }
+
+    /* 内容区域 */
+    .content {
+      font-size: 20px;
+      line-height: 2.2;
+      color: #000;
+      text-align: center;
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+    }
+
+    .content-text {
+      margin: 15px 0;
+      text-indent: 0;
+    }
+
+    .name-highlight {
+      font-size: 26px;
+      font-weight: bold;
+      color: #1a237e;
+      display: inline-block;
+      padding: 0 15px;
+      border-bottom: 2px solid #d4af37;
+      min-width: 150px;
+    }
+
+    #training-course {
+      font-weight: bold;
+    }
+
+    #training-date {
+      font-weight: bold;
+    }
+
+    /* 底部签名区域 */
+    .footer {
+      position: absolute;
+      bottom: 120px;
+      right: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .signature-left {
+      text-align: center;
+      width: 100%;
+    }
+
+    .signature-right {
+      text-align: left;
+      position: relative;
+    }
+
+    .signature-label {
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+      margin-bottom: 10px;
+    }
+
+    .date {
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+      margin-top: 10px;
+    }
+
+    /* 印章样式 */
+    .seal {
+      width: 130px;
+      height: 130px;
+      border: 3px solid #c62828;
+      border-radius: 50%;
+      position: relative;
+      display: inline-block;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(198, 40, 40, 0.3);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .seal::before {
+      content: "培训单位";
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: #c62828;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .seal::after {
+      content: "专用章";
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: #c62828;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .seal-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    /* 打印样式 */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+        flex-direction: row;
+      }
+      .control-panel {
+        display: none;
+      }
+      .certificate-container {
+        box-shadow: none;
+        border: 8px solid #d4af37;
+        width: 1000px;
+        height: 700px;
+      }
+      @page {
+        size: landscape;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 控制面板 -->
+  <div class="control-panel">
+    <label for="name-input">姓名：</label>
+    <input type="text" id="name-input" placeholder="请输入姓名" value="许燕波">
+    <label for="number-input">证书编号：</label>
+    <input type="text" id="number-input" placeholder="请输入证书编号" value="TRA-20251227-01">
+    <label for="date-input">培训日期：</label>
+    <input type="text" id="date-input" placeholder="例如：2024 年 5 月 23 日" value="2025 年 12 月 27 日">
+    <label for="course-input">培训内容：</label>
+    <input type="text" id="course-input" placeholder="请输入培训内容" value="南方医科大学珠江医院甲状腺外科腔镜技术培训班">
+    <label for="certificate-date-input">发证日期：</label>
+    <input type="text" id="certificate-date-input" placeholder="例如：2025年12月27日" value="2025年12月27日">
+    <button class="download-btn" id="download-btn">下载PDF</button>
+  </div>
+
+  <div class="certificate-container">
+    <!-- 背景图片 -->
+    <img src="证书.png" alt="证书背景" class="certificate-bg">
+    <!-- 四角装饰 -->
+    <div class="corner corner-top-left"></div>
+    <div class="corner corner-top-right"></div>
+    <div class="corner corner-bottom-left"></div>
+    <div class="corner corner-bottom-right"></div>
+
+    <!-- 标题区域 -->
+    <div class="header">
+      <div class="header-title">培训证书</div>
+      <div class="header-subtitle">CERTIFICATE OF TRAINING</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 培训基地主任签名 -->
+    <div class="director-signature">培训基地主任签名：</div>
+
+    <!-- 证书编号 -->
+    <div class="certificate-number">证书编号：<span id="certificate-number">TRA-20251227-01</span></div>
+
+    <!-- 内容区域 -->
+    <div class="content">
+      <div class="content-text">
+        兹证明 <span class="name-highlight" id="certificate-name">许燕波</span> 同志
+      </div>
+      <div class="content-text">
+        于 <span id="training-date">2025 年 12 月 27 日</span>参加了《<span id="training-course">南方医科大学珠江医院甲状腺外科腔镜技术培训班</span>》
+      </div>
+      <div class="content-text">
+        成绩合格，特发此证。
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 底部签名区域 -->
+    <div class="footer">
+      <div class="signature-left">
+        <div class="signature-label">南方医科大学珠江医院</div>
+        <div class="date" id="certificate-date">2025年12月27日</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 获取输入框和证书上的名字元素
+    const nameInput = document.getElementById('name-input');
+    const certificateName = document.getElementById('certificate-name');
+    const numberInput = document.getElementById('number-input');
+    const certificateNumber = document.getElementById('certificate-number');
+    const dateInput = document.getElementById('date-input');
+    const trainingDate = document.getElementById('training-date');
+    const courseInput = document.getElementById('course-input');
+    const trainingCourse = document.getElementById('training-course');
+    const certificateDateInput = document.getElementById('certificate-date-input');
+    const certificateDate = document.getElementById('certificate-date');
+
+    // 实时更新名字
+    nameInput.addEventListener('input', function() {
+      const name = this.value.trim();
+      // 如果输入为空，显示默认值
+      certificateName.textContent = name || '许燕波';
+    });
+
+    // 实时更新证书编号
+    numberInput.addEventListener('input', function() {
+      const number = this.value.trim();
+      // 如果输入为空，显示默认值
+      certificateNumber.textContent = number || 'TRA-20251227-01';
+    });
+
+    // 实时更新培训日期
+    dateInput.addEventListener('input', function() {
+      const date = this.value.trim();
+      // 如果输入为空，显示默认值
+      trainingDate.textContent = date || '2025 年 12 月 27 日';
+    });
+
+    // 实时更新培训内容
+    courseInput.addEventListener('input', function() {
+      const course = this.value.trim();
+      // 如果输入为空，显示默认值
+      trainingCourse.textContent = course || '心理辅导实用技能培训';
+    });
+
+    // 实时更新发证日期
+    certificateDateInput.addEventListener('input', function() {
+      const date = this.value.trim();
+      // 如果输入为空，显示默认值
+      certificateDate.textContent = date || '2025年12月27日';
+    });
+
+    // 页面加载时同步输入框的值
+    window.addEventListener('DOMContentLoaded', function() {
+      certificateName.textContent = nameInput.value || '张三';
+      certificateNumber.textContent = numberInput.value || 'TRA-20251227-01';
+      trainingDate.textContent = dateInput.value || '2025 年 12 月 27 日';
+      trainingCourse.textContent = courseInput.value || '心理辅导实用技能培训';
+      certificateDate.textContent = certificateDateInput.value || '2025年12月27日';
+    });
+
+    // 将图片转换为base64，避免跨域问题
+    function convertImageToBase64(img) {
+      return new Promise(function(resolve, reject) {
+        if (!img || !img.src) {
+          reject(new Error('图片不存在'));
+          return;
+        }
+        
+        // 如果已经是base64，直接返回
+        if (img.src.startsWith('data:')) {
+          resolve(img.src);
+          return;
+        }
+        
+        // 使用fetch直接获取图片，避免跨域问题
+        fetch(img.src)
+          .then(function(response) {
+            if (!response.ok) {
+              throw new Error('图片加载失败');
+            }
+            return response.blob();
+          })
+          .then(function(blob) {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+              resolve(reader.result);
+            };
+            reader.onerror = function() {
+              reject(new Error('图片读取失败'));
+            };
+            reader.readAsDataURL(blob);
+          })
+          .catch(function(error) {
+            // 如果fetch失败，尝试使用canvas（可能会失败，但至少尝试一下）
+            if (img.complete && img.naturalWidth > 0) {
+              try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                ctx.drawImage(img, 0, 0);
+                const dataURL = canvas.toDataURL('image/png');
+                resolve(dataURL);
+              } catch (e) {
+                reject(error);
+              }
+            } else {
+              reject(error);
+            }
+          });
+      });
+    }
+
+    // 下载证书功能
+    const downloadBtn = document.getElementById('download-btn');
+    const certificateContainer = document.querySelector('.certificate-container');
+    
+    downloadBtn.addEventListener('click', function() {
+      // 隐藏控制面板
+      const controlPanel = document.querySelector('.control-panel');
+      controlPanel.style.display = 'none';
+      
+      // 获取背景图片
+      const bgImg = document.querySelector('.certificate-bg');
+      const originalSrc = bgImg ? bgImg.src : null;
+      let base64Src = null;
+      
+      // 确保图片已加载，然后转换为base64
+      function processImageAndDownload() {
+        if (bgImg && originalSrc && !originalSrc.startsWith('data:')) {
+          convertImageToBase64(bgImg).then(function(dataURL) {
+            base64Src = dataURL;
+            // 等待图片加载完成后再替换
+            const newImg = new Image();
+            newImg.onload = function() {
+              bgImg.src = dataURL; // 临时替换为base64
+              // 等待浏览器重新渲染
+              setTimeout(startDownload, 300);
+            };
+            newImg.onerror = function() {
+              bgImg.src = dataURL;
+              setTimeout(startDownload, 300);
+            };
+            newImg.src = dataURL;
+          }).catch(function(error) {
+            console.warn('图片转换失败，尝试直接下载:', error);
+            // 即使转换失败也尝试下载（使用allowTaint）
+            setTimeout(function() {
+              startDownload(true);
+            }, 100);
+          });
+        } else {
+          setTimeout(startDownload, 100);
+        }
+      }
+      
+      function startDownload(useTaint) {
+        // 使用html2pdf将证书转换为PDF
+        const opt = {
+          margin: 0,
+          filename: '培训证书_' + (certificateName.textContent || '证书') + '.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2,
+            useCORS: !useTaint,
+            allowTaint: useTaint || false,
+            logging: false,
+            backgroundColor: '#fff',
+            foreignObjectRendering: false
+          },
+          jsPDF: { 
+            unit: 'px', 
+            format: [1000, 700], // 证书尺寸
+            orientation: 'landscape'
+          }
+        };
+        
+        html2pdf().set(opt).from(certificateContainer).save().then(function() {
+          // 恢复原图片源
+          if (bgImg && originalSrc && base64Src) {
+            bgImg.src = originalSrc;
+          }
+          // 恢复控制面板显示
+          controlPanel.style.display = 'flex';
+        }).catch(function(error) {
+          console.error('下载失败:', error);
+          // 恢复原图片源
+          if (bgImg && originalSrc && base64Src) {
+            bgImg.src = originalSrc;
+          }
+          alert('下载失败，请重试。错误信息：' + error.message);
+          // 恢复控制面板显示
+          controlPanel.style.display = 'flex';
+        });
+      }
+      
+      // 如果图片已加载，直接处理；否则等待图片加载
+      if (bgImg && bgImg.complete && bgImg.naturalHeight !== 0) {
+        processImageAndDownload();
+      } else if (bgImg) {
+        bgImg.onload = function() {
+          processImageAndDownload();
+        };
+        // 如果图片加载超时，也尝试下载
+        setTimeout(function() {
+          if (!base64Src) {
+            processImageAndDownload();
+          }
+        }, 2000);
+      } else {
+        setTimeout(startDownload, 100);
+      }
+    });
+  </script>
+</body>
+</html>
