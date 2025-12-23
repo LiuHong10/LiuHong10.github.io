@@ -215,6 +215,17 @@
       left: 150px;
     }
 
+    .signature-image {
+      position: absolute;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 300px;
+      max-height: 120px;
+      object-fit: contain;
+      z-index: 2;
+    }
+
     .certificate-number {
       text-align: left;
       font-size: 14px;
@@ -400,6 +411,9 @@
 
     <!-- 培训基地主任签名 -->
     <div class="director-signature">培训基地主任签名：</div>
+
+    <!-- 签名图片 -->
+    <img src="珠江医院甲状腺外科.jpg" alt="签名" class="signature-image">
 
     <!-- 证书编号 -->
     <div class="certificate-number">证书编号：<span id="certificate-number">TRA-20251227-01</span></div>
