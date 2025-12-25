@@ -224,6 +224,7 @@
       max-height: 120px;
       object-fit: contain;
       z-index: 2;
+      background-color: white;
     }
 
     .certificate-number {
@@ -390,6 +391,10 @@
     <label for="certificate-date-input">发证日期：</label>
     <input type="text" id="certificate-date-input" placeholder="例如：2025年12月27日" value="2025年12月27日">
     <button class="download-btn" id="download-btn">下载PDF</button>
+    <button class="download-btn" id="detect-color-btn" style="background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);">检测图片底色</button>
+    <div id="color-result" style="padding: 10px; background: #f0f0f0; border-radius: 5px; margin-top: 10px; display: none;">
+      <strong>检测结果：</strong><span id="color-info"></span>
+    </div>
   </div>
 
   <div class="certificate-container">
@@ -652,6 +657,144 @@
         setTimeout(startDownload, 100);
       }
     });
+
+    // 检测图片底色功能
+    const detectColorBtn = document.getElementById('detect-color-btn');
+    const colorResult = document.getElementById('color-result');
+    const colorInfo = document.getElementById('color-info');
+    
+    detectColorBtn.addEventListener('click', function() {
+      const signatureImg = document.querySelector('.signature-image');
+      if (!signatureImg) {
+        alert('未找到签名图片');
+        return;
+      }
+      
+      // 等待图片加载完成
+      if (!signatureImg.complete || signatureImg.naturalWidth === 0) {
+        signatureImg.onload = function() {
+          analyzeImageColor(signatureImg);
+        };
+        // 如果图片加载失败，也尝试分析
+        signatureImg.onerror = function() {
+          alert('图片加载失败，无法分析');
+        };
+      } else {
+        analyzeImageColor(signatureImg);
+      }
+    });
+    
+    function analyzeImageColor(img) {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        
+        // 绘制图片到canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // 获取图片数据
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // 分析四个角和边缘的像素颜色
+        const samplePoints = [];
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // 四个角
+        samplePoints.push({x: 0, y: 0});
+        samplePoints.push({x: width - 1, y: 0});
+        samplePoints.push({x: 0, y: height - 1});
+        samplePoints.push({x: width - 1, y: height - 1});
+        
+        // 边缘中间点
+        samplePoints.push({x: Math.floor(width / 2), y: 0});
+        samplePoints.push({x: Math.floor(width / 2), y: height - 1});
+        samplePoints.push({x: 0, y: Math.floor(height / 2)});
+        samplePoints.push({x: width - 1, y: Math.floor(height / 2)});
+        
+        // 收集所有采样点的颜色
+        const colors = [];
+        for (let point of samplePoints) {
+          const index = (point.y * width + point.x) * 4;
+          const r = data[index];
+          const g = data[index + 1];
+          const b = data[index + 2];
+          const a = data[index + 3];
+          colors.push({r, g, b, a});
+        }
+        
+        // 计算平均颜色
+        let avgR = 0, avgG = 0, avgB = 0, avgA = 0;
+        for (let color of colors) {
+          avgR += color.r;
+          avgG += color.g;
+          avgB += color.b;
+          avgA += color.a;
+        }
+        avgR = Math.round(avgR / colors.length);
+        avgG = Math.round(avgG / colors.length);
+        avgB = Math.round(avgB / colors.length);
+        avgA = Math.round(avgA / colors.length);
+        
+        // 判断是否为白色或接近白色
+        const isWhite = avgR > 240 && avgG > 240 && avgB > 240;
+        const isTransparent = avgA < 255;
+        
+        // 格式化颜色信息
+        const rgbColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
+        const hexColor = '#' + [avgR, avgG, avgB].map(x => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+        
+        let colorDescription = '';
+        if (isTransparent && avgA < 128) {
+          colorDescription = '透明或半透明背景';
+        } else if (isWhite) {
+          colorDescription = '白色或接近白色背景';
+        } else {
+          colorDescription = '非白色背景';
+        }
+        
+        // 显示结果
+        colorInfo.innerHTML = `
+          <div style="margin-top: 5px;">
+            <strong>${colorDescription}</strong><br>
+            RGB: ${rgbColor}<br>
+            十六进制: ${hexColor}<br>
+            透明度: ${Math.round(avgA / 255 * 100)}%<br>
+            <div style="width: 100px; height: 30px; background-color: ${rgbColor}; border: 1px solid #ccc; margin-top: 5px; display: inline-block;"></div>
+            <br><button id="apply-bg-btn" style="margin-top: 10px; padding: 5px 15px; background: #4caf50; color: white; border: none; border-radius: 3px; cursor: pointer;">应用为证书背景色</button>
+          </div>
+        `;
+        colorResult.style.display = 'block';
+        
+        // 添加应用背景色按钮的事件监听
+        const applyBgBtn = document.getElementById('apply-bg-btn');
+        if (applyBgBtn) {
+          applyBgBtn.onclick = function() {
+            const certificateContainer = document.querySelector('.certificate-container');
+            if (certificateContainer) {
+              certificateContainer.style.backgroundColor = rgbColor;
+              alert('已应用照片底色到证书背景！');
+            }
+          };
+        }
+        
+        // 自动应用背景色（如果用户希望自动应用）
+        const certificateContainer = document.querySelector('.certificate-container');
+        if (certificateContainer) {
+          certificateContainer.style.backgroundColor = rgbColor;
+        }
+        
+      } catch (error) {
+        alert('分析图片时出错: ' + error.message);
+        console.error(error);
+      }
+    }
   </script>
 </body>
 </html>
