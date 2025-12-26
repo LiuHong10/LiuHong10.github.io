@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
+  <title>培训证书</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * {
@@ -103,6 +103,7 @@
       object-fit: cover;
       z-index: 0;
       pointer-events: none;
+      visibility: hidden; /* 隐藏背景图片，但保持布局 */
     }
 
     .certificate-container > * {
@@ -187,8 +188,8 @@
 
     /* 装饰线 */
     .divider {
-      width: 0px;
-      height: 0px;
+      width: 300px;
+      height: 2px;
       background: linear-gradient(to right, transparent, #d4af37, transparent);
       position: absolute;
       left: 50%;
@@ -225,6 +226,7 @@
       object-fit: contain;
       z-index: 2;
       background-color: transparent;
+      visibility: hidden; /* 隐藏签名图片，但保持布局 */
     }
 
     .certificate-number {
@@ -394,8 +396,8 @@
   </div>
 
   <div class="certificate-container">
-    <!-- 背景图片 -->
-    <img src="" alt="证书背景" class="certificate-bg">
+    <!-- 背景图片（已隐藏，用于保持布局） -->
+    <img src="证书.png" alt="证书背景" class="certificate-bg">
     <!-- 四角装饰 -->
     <div class="corner corner-top-left"></div>
     <div class="corner corner-top-right"></div>
@@ -404,8 +406,8 @@
 
     <!-- 标题区域 -->
     <div class="header">
-      <div class="header-title"></div>
-      <div class="header-subtitle"></div>
+      <div class="header-title">培训证书</div>
+      <div class="header-subtitle">CERTIFICATE OF TRAINING</div>
     </div>
 
     <div class="divider"></div>
@@ -414,7 +416,7 @@
     <div class="director-signature">培训基地主任签名：</div>
 
     <!-- 签名图片 -->
-    <img src="" alt="签名" class="signature-image">
+    <img src="珠江医院甲状腺外科_无背景.png" alt="签名" class="signature-image">
 
     <!-- 证书编号 -->
     <div class="certificate-number">证书编号：<span id="certificate-number">TRA-20251227-01</span></div>
